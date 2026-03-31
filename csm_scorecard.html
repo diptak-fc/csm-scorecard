@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSM Accountability Scorecard</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:  #0D1B2A;
+    --slate: #1B3A5C;
+    --steel: #2E6DA4;
+    --ice:   #D6E8F7;
+    --white: #FFFFFF;
+    --offW:  #F4F7FB;
+    --red:   #C0392B;
+    --amber: #E67E22;
+    --green: #1E8449;
+    --muted: #7F8C9A;
+    --light: #B0C4D8;
+    --border:#DDE8F0;
+    --shadow: 0 2px 12px rgba(13,27,42,0.10);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--offW);
+    color: var(--navy);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--navy);
+    padding: 0;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.25);
+  }
+  .header-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-bar { width: 4px; height: 32px; background: var(--steel); border-radius: 2px; }
+  .logo-text { font-size: 16px; font-weight: 700; color: var(--white); letter-spacing: .03em; }
+  .logo-sub  { font-size: 11px; color: var(--light); margin-top: 2px; }
+  .header-actions { display: flex; gap: 10px; }
+  .btn { padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: 600;
+         cursor: pointer; border: none; transition: all .15s; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--steel); color: var(--ice); }
+  .btn-outline:hover { background: var(--steel); }
+  .btn-primary { background: var(--steel); color: var(--white); }
+  .btn-primary:hover { background: #245C8A; }
+
+  /* ── Layout ── */
+  .main { max-width: 1100px; margin: 0 auto; padding: 28px 24px 60px; }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--border); margin-bottom: 28px; }
+  .tab-btn {
+    padding: 10px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+    border: none; background: transparent; color: var(--muted);
+    border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .15s;
+    border-radius: 6px 6px 0 0;
+  }
+  .tab-btn:hover { color: var(--navy); background: rgba(46,109,164,0.06); }
+  .tab-btn.active { color: var(--steel); border-bottom-color: var(--steel); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── Section label ── */
+  .section-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--steel); margin-bottom: 14px;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 24px;
+    box-shadow: var(--shadow); margin-bottom: 16px;
+  }
+  .card-title { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+  .card-body  { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+  /* ── Grid ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  /* ── KPI cards ── */
+  .kpi-card {
+    background: var(--navy); border-radius: 12px; padding: 20px;
+    text-align: center; box-shadow: var(--shadow);
+  }
+  .kpi-val  { font-size: 32px; font-weight: 700; color: var(--white); }
+  .kpi-label{ font-size: 12px; color: var(--light); margin-top: 4px; line-height: 1.4; }
+
+  /* ── Accent strip cards ── */
+  .strip-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 10px; box-shadow: var(--shadow);
+    margin-bottom: 12px; display: flex; overflow: hidden;
+  }
+  .strip { width: 5px; flex-shrink: 0; }
+  .strip-body { padding: 14px 18px; flex: 1; }
+  .strip-title { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .strip-text  { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+  /* ── Table ── */
+  .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: var(--navy); color: var(--white); font-weight: 600;
+       padding: 11px 14px; text-align: left; font-size: 12px; }
+  th:first-child { border-radius: 10px 0 0 0; }
+  th:last-child  { border-radius: 0 10px 0 0; }
+  td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--navy); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #F8FBFF; }
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 700;
+    padding: 2px 9px; border-radius: 99px;
+  }
+  .b-green  { background: #D5F0DC; color: var(--green); }
+  .b-amber  { background: #FDE8CF; color: #A0510A; }
+  .b-red    { background: #FAD5D2; color: var(--red); }
+  .b-steel  { background: #D6E8F7; color: var(--steel); }
+
+  /* ── Scorecard tab ── */
+  .sc-toolbar {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .sc-select {
+    padding: 8px 14px; border: 1.5px solid var(--border); border-radius: 8px;
+    font-size: 14px; font-weight: 600; color: var(--navy);
+    background: var(--white); cursor: pointer;
+  }
+  .sc-header {
+    background: var(--navy); border-radius: 12px; padding: 20px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+  }
+  .sc-name { font-size: 20px; font-weight: 700; color: var(--white); }
+  .sc-period{ font-size: 12px; color: var(--light); margin-top: 3px; }
+  .sc-total { font-size: 36px; font-weight: 700; color: var(--white); }
+  .grade-badge {
+    font-size: 13px; font-weight: 700; padding: 5px 14px;
+    border-radius: 99px; margin-left: 10px;
+  }
+  .g-elite    { background: var(--green); color: var(--white); }
+  .g-strong   { background: var(--steel); color: var(--white); }
+  .g-marginal { background: var(--amber); color: var(--white); }
+  .g-risk     { background: var(--red);   color: var(--white); }
+
+  .dim-row {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px; margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  .dim-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 10px; flex-wrap: wrap; gap: 8px;
+  }
+  .dim-label { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .dim-desc  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .dim-right { display: flex; align-items: center; gap: 14px; }
+  .dim-pts   { font-size: 13px; font-weight: 700; color: var(--steel); min-width: 45px; text-align: right; }
+  input[type=range] {
+    -webkit-appearance: none; width: 160px; height: 5px;
+    border-radius: 3px; background: var(--border); outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--steel); cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .bar-track { height: 8px; background: var(--border); border-radius: 4px; margin-top: 4px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 4px; transition: width .25s ease; }
+
+  .stat-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+    margin: 20px 0;
+  }
+  @media (max-width: 600px) { .stat-grid { grid-template-columns: 1fr 1fr; } }
+  .stat-card { background: var(--offW); border-radius: 10px; padding: 14px 16px; }
+  .stat-label{ font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .stat-val  { font-size: 22px; font-weight: 700; color: var(--navy); }
+  .stat-max  { font-size: 13px; color: var(--muted); font-weight: 400; }
+
+  .narrative {
+    background: #EFF7FF; border-left: 4px solid var(--steel);
+    border-radius: 0 10px 10px 0; padding: 14px 18px;
+    font-size: 13px; color: var(--slate); line-height: 1.7;
+    margin-top: 16px;
+  }
+
+  /* ── History tab ── */
+  .history-entry {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px 20px; margin-bottom: 12px;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: var(--shadow); flex-wrap: wrap; gap: 10px;
+  }
+  .he-left .he-name   { font-size: 14px; font-weight: 700; color: var(--navy); }
+  .he-left .he-period { font-size: 12px; color: var(--muted); }
+  .he-right { display: flex; align-items: center; gap: 12px; }
+  .he-score { font-size: 22px; font-weight: 700; color: var(--navy); }
+  .he-actions { display: flex; gap: 6px; }
+  .icon-btn {
+    width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; font-size: 14px; color: var(--muted);
+    transition: all .15s;
+  }
+  .icon-btn:hover { background: var(--offW); color: var(--navy); }
+  .icon-btn.del:hover { background: #FAD5D2; color: var(--red); border-color: #F5B0AA; }
+
+  /* ── Consequences tab ── */
+  .consequence-block {
+    border-left: 4px solid; border-radius: 0 10px 10px 0;
+    padding: 14px 18px; margin-bottom: 14px; background: var(--white);
+    box-shadow: var(--shadow);
+  }
+  .c-red-border    { border-color: var(--red); }
+  .c-amber-border  { border-color: var(--amber); }
+  .c-steel-border  { border-color: var(--steel); }
+  .c-green-border  { border-color: var(--green); }
+  .cb-title { font-size: 13px; font-weight: 700; margin-bottom: 5px; }
+  .cb-body  { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--white); border-radius: 14px; padding: 28px;
+    width: 100%; max-width: 420px; box-shadow: 0 8px 40px rgba(0,0,0,0.22);
+    transform: translateY(12px); transition: transform .2s;
+    margin: 0 16px;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 16px; color: var(--navy); }
+  .form-row { margin-bottom: 14px; }
+  .form-row label { display: block; font-size: 12px; font-weight: 600; color: var(--muted);
+                    margin-bottom: 5px; text-transform: uppercase; letter-spacing: .05em; }
+  .form-row input, .form-row select {
+    width: 100%; padding: 9px 12px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-size: 14px; color: var(--navy);
+    background: var(--white); outline: none;
+  }
+  .form-row input:focus, .form-row select:focus { border-color: var(--steel); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
+
+  /* ── Print / export ── */
+  @media print {
+    .header, .tabs, .sc-toolbar, .modal-overlay,
+    .header-actions, .icon-btn, .btn { display: none !important; }
+    .tab-panel { display: block !important; }
+    body { background: white; }
+  }
+
+  .empty-state {
+    text-align: center; padding: 48px 20px;
+    color: var(--muted); font-size: 14px;
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-bar"></div>
+      <div>
+        <div class="logo-text">CSM Accountability OS</div>
+        <div class="logo-sub">Director of Client Success · Performance Framework</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline" onclick="openAddModal()">+ Add CSM</button>
+      <button class="btn btn-primary" onclick="exportCSV()">Export CSV</button>
+    </div>
+  </div>
+</header>
+
+<!-- Main -->
+<main class="main">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('weekly')">Weekly Ops</button>
+    <button class="tab-btn" onclick="showTab('monthly')">Monthly Gates</button>
+    <button class="tab-btn" onclick="showTab('quarterly')">Quarterly</button>
+    <button class="tab-btn" onclick="showTab('scorecard')">Scorecard</button>
+    <button class="tab-btn" onclick="showTab('history')">Team History</button>
+    <button class="tab-btn" onclick="showTab('consequences')">Consequences</button>
+  </div>
+
+  <!-- WEEKLY -->
+  <div id="tab-weekly" class="tab-panel active">
+    <p class="section-label">Five mandatory deliverables — every CSM, every Monday</p>
+    <div id="weekly-list"></div>
+    <div style="margin-top:24px">
+      <p class="section-label">Weekly submission checklist</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Deliverable</th><th>Owner</th><th>Due</th><th>Miss trigger</th></tr></thead>
+          <tbody>
+            <tr><td>SKU audit + action plan</td><td>CSM</td><td>Mon EOD</td><td><span class="badge b-red">Red flag logged</span></td></tr>
+            <tr><td>Proactive KAM ping log</td><td>CSM</td><td>Tue EOD</td><td><span class="badge b-amber">Performance note</span></td></tr>
+            <tr><td>Competitive scan note</td><td>CSM</td><td>Wed EOD</td><td><span class="badge b-amber">Returned for redo</span></td></tr>
+            <tr><td>Underperformer turnaround</td><td>CSM</td><td>Thu EOD</td><td><span class="badge b-red">Formal warning</span></td></tr>
+            <tr><td>KAM partnership pipeline log</td><td>KAM</td><td>Fri EOD</td><td><span class="badge b-red">Director review call</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONTHLY -->
+  <div id="tab-monthly" class="tab-panel">
+    <div class="grid-3" style="margin-bottom:24px">
+      <div class="kpi-card"><div class="kpi-val">≥ 90%</div><div class="kpi-label">Policy test pass rate</div></div>
+      <div class="kpi-card"><div class="kpi-val">≥ 12</div><div class="kpi-label">Proactive client touches / month</div></div>
+      <div class="kpi-card"><div class="kpi-val">100%</div><div class="kpi-label">Accounts with active plan</div></div>
+    </div>
+    <p class="section-label">Monthly compliance test protocol</p>
+    <div class="card">
+      <div class="card-title">20-question rotating policy test</div>
+      <div class="card-body">Rotate question bank monthly — rote memorisation is not rewarded. Passing threshold: 90%. Below 80%: mandatory remediation within 5 business days + retest. Below 70% twice in a quarter: PIP trigger.</div>
+    </div>
+    <p class="section-label" style="margin-top:20px">Monthly scoring grid</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Gate</th><th>Weight</th><th>Green</th><th>Amber</th><th>Red</th></tr></thead>
+        <tbody>
+          <tr><td>Policy test score</td><td>25 pts</td><td><span class="badge b-green">≥ 90%</span></td><td><span class="badge b-amber">80–89%</span></td><td><span class="badge b-red">&lt; 80%</span></td></tr>
+          <tr><td>Proactive touches logged</td><td>20 pts</td><td><span class="badge b-green">≥ 12</span></td><td><span class="badge b-amber">8–11</span></td><td><span class="badge b-red">&lt; 8</span></td></tr>
+          <tr><td>Accounts with active plan</td><td>20 pts</td><td><span class="badge b-green">100%</span></td><td><span class="badge b-amber">80–99%</span></td><td><span class="badge b-red">&lt; 80%</span></td></tr>
+          <tr><td>Competitive scan quality</td><td>15 pts</td><td><span class="badge b-green">Actionable</span></td><td><span class="badge b-amber">Descriptive</span></td><td><span class="badge b-red">Generic/missing</span></td></tr>
+          <tr><td>Turnaround plans executed</td><td>20 pts</td><td><span class="badge b-green">Plan + outcome</span></td><td><span class="badge b-amber">Plan only</span></td><td><span class="badge b-red">No plan</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- QUARTERLY -->
+  <div id="tab-quarterly" class="tab-panel">
+    <div class="grid-2">
+      <div>
+        <p class="section-label">Quarterly requirements</p>
+        <div id="quarterly-reqs"></div>
+      </div>
+      <div>
+        <p class="section-label">Performance bands</p>
+        <div id="quarterly-bands"></div>
+      </div>
+    </div>
+    <div style="margin-top:16px" class="card">
+      <div class="card-title">Mentorship program — 90-day cycle</div>
+      <div class="card-body">Pair every CSM with a senior KAM or director. Mentor obligations: 2 live client call shadows, 1 deal debrief, 1 written feedback submission per cycle. Mentorship is a two-way performance obligation — mentors are held accountable too.</div>
+    </div>
+  </div>
+
+  <!-- SCORECARD -->
+  <div id="tab-scorecard" class="tab-panel">
+    <div class="sc-toolbar">
+      <select class="sc-select" id="csm-select" onchange="loadCSM()">
+        <option value="">— Select a CSM —</option>
+      </select>
+      <select class="sc-select" id="period-select" onchange="loadCSM()">
+        <option value="">— Select period —</option>
+      </select>
+      <button class="btn btn-primary" onclick="saveScore()">Save Score</button>
+      <button class="btn btn-outline" onclick="printCard()">Print</button>
+    </div>
+
+    <div id="sc-header" class="sc-header" style="display:none">
+      <div>
+        <div class="sc-name" id="sc-name-display">—</div>
+        <div class="sc-period" id="sc-period-display">—</div>
+      </div>
+      <div style="display:flex;align-items:baseline">
+        <span class="sc-total" id="sc-total">—</span>
+        <span class="grade-badge" id="sc-grade">—</span>
+      </div>
+    </div>
+
+    <div id="sc-placeholder" class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div>Select a CSM and period to begin scoring, or add a CSM with the button above.</div>
+    </div>
+
+    <div id="sc-body" style="display:none">
+      <p class="section-label">Score each dimension</p>
+      <div id="dim-rows"></div>
+      <div class="stat-grid" id="stat-grid"></div>
+      <div class="narrative" id="narrative-text"></div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div id="tab-history" class="tab-panel">
+    <p class="section-label">All saved scores</p>
+    <div id="history-list"></div>
+  </div>
+
+  <!-- CONSEQUENCES -->
+  <div id="tab-consequences" class="tab-panel">
+    <div class="grid-2">
+      <div>
+        <p class="section-label">Consequence ladder — non-performance</p>
+        <div class="consequence-block c-steel-border">
+          <div class="cb-title" style="color:var(--steel)">First miss → Verbal + logged note</div>
+          <div class="cb-body">One missed deliverable or 80–89% policy test. Verbal conversation same week. Note logged in performance file. No ambiguity about expectations.</div>
+        </div>
+        <div class="consequence-block c-amber-border">
+          <div class="cb-title" style="color:#A0510A">Second miss (same, 30 days) → Written warning</div>
+          <div class="cb-body">Pattern established. Written warning issued. CSM submits self-corrective plan within 5 days. KAM notified. Director reviews in next 1:1.</div>
+        </div>
+        <div class="consequence-block c-red-border">
+          <div class="cb-title" style="color:var(--red)">Third miss or Q-score &lt; 60 → PIP initiated</div>
+          <div class="cb-body">30–60 day formal Performance Improvement Plan. Specific, measurable, time-bound targets. Weekly check-ins. Mentorship support assigned immediately.</div>
+        </div>
+        <div class="consequence-block c-red-border" style="border-left-width:6px">
+          <div class="cb-title" style="color:var(--red)">PIP failure or 2 amber quarters → Exit</div>
+          <div class="cb-body">Role reassignment or separation. This is structural, not punitive. Act decisively — a non-performer costs the team, clients, and every KAM they support.</div>
+        </div>
+      </div>
+      <div>
+        <p class="section-label">Reward ladder — high performance</p>
+        <div class="consequence-block c-green-border">
+          <div class="cb-title" style="color:var(--green)">2 green months in a row → Recognition</div>
+          <div class="cb-body">Public acknowledgement in team meeting. Peer recognition nomination. Added to stretch project list.</div>
+        </div>
+        <div class="consequence-block c-green-border">
+          <div class="cb-title" style="color:var(--green)">Elite band (90+) → Advancement trigger</div>
+          <div class="cb-body">Compensation review initiated. Senior CSM shadow program offered. First consideration for team lead openings.</div>
+        </div>
+        <div class="consequence-block c-green-border" style="border-left-width:6px">
+          <div class="cb-title" style="color:var(--green)">2 elite quarters → Fast-track</div>
+          <div class="cb-body">Formal promotion discussion with HR. Expanded account portfolio. Invited to director-level strategy sessions.</div>
+        </div>
+        <div class="card" style="margin-top:20px">
+          <div class="card-title">Tough conversation protocol</div>
+          <div class="card-body">Direct, same week. No softening preamble. Lead with the specific missed behaviour. State the expected standard. State the consequence if unmet. Confirm understanding. Document immediately. This is not optional and cannot be delegated.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- Add CSM Modal -->
+<div class="modal-overlay" id="add-modal">
+  <div class="modal">
+    <h3>Add CSM to roster</h3>
+    <div class="form-row">
+      <label>Full name</label>
+      <input type="text" id="new-csm-name" placeholder="e.g. Alex Rodriguez">
+    </div>
+    <div class="form-row">
+      <label>Role</label>
+      <select id="new-csm-role">
+        <option>Client Success Manager</option>
+        <option>Senior CSM</option>
+        <option>Key Account Manager</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="addCSM()">Add CSM</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const STATE_KEY = 'csm_os_v2';
+let state = load();
+
+function load() {
+  try { return JSON.parse(localStorage.getItem(STATE_KEY)) || defaultState(); }
+  catch { return defaultState(); }
+}
+function save() { localStorage.setItem(STATE_KEY, JSON.stringify(state)); }
+function defaultState() {
+  return {
+    csms: [
+      { id:'c1', name:'Alex R.', role:'Client Success Manager' },
+      { id:'c2', name:'Priya M.', role:'Senior CSM' },
+      { id:'c3', name:'Jordan T.', role:'Client Success Manager' },
+    ],
+    scores: []
+  };
+}
+
+// ── Dimensions ─────────────────────────────────────────────────────────────
+const DIMS = [
+  { key:'sku',    label:'SKU Audit Quality',           max:20, color:'#2E6DA4',
+    desc:'Are audits timely, strategic, and action-oriented?' },
+  { key:'proact', label:'Proactive Client Touches',    max:20, color:'#1E8449',
+    desc:'Did they initiate contact and anticipate needs?' },
+  { key:'comp',   label:'Competitive Scan Depth',      max:15, color:'#E67E22',
+    desc:'Are insights actionable or merely descriptive?' },
+  { key:'plan',   label:'Turnaround Plans Executed',   max:20, color:'#C0392B',
+    desc:'Plan submitted + outcome tracked, not just filed?' },
+  { key:'policy', label:'Policy Test Score',           max:15, color:'#8E44AD',
+    desc:'Monthly knowledge test — 90% threshold required' },
+  { key:'strat',  label:'Strategic Proposal Quality',  max:10, color:'#1B6CA8',
+    desc:'Quarterly 1-pager: rescue, growth, proactive risk' },
+];
+
+// ── Weekly tab ─────────────────────────────────────────────────────────────
+const WEEKLY = [
+  { accent:'#C0392B', title:'01  SKU Audit + Pipeline Rank',
+    body:'Review top 10 SKUs by revenue. Rank 5 rising SKUs by velocity trend. One documented action per declining SKU.',
+    flag:'🔴 Red flag: no action plan on a declining SKU' },
+  { accent:'#E67E22', title:'02  Proactive KAM Alignment',
+    body:'CSM initiates one structured KAM touchpoint before client speaks first. Log the insight, question, and anticipated client response.',
+    flag:'🔴 Red flag: waiting for client to surface issues' },
+  { accent:'#2E6DA4', title:'03  Competitive + Social Scan',
+    body:'Weekly sweep of 3+ platforms. Flag one competitive move with a 2-line impact note. No quiet-week excuses.',
+    flag:'🟡 Amber flag: generic scan with no impact framing' },
+  { accent:'#C0392B', title:'04  Underperformer Action Plan',
+    body:'Identify one at-risk account. Submit turnaround plan with at least 2 measurable interventions and a deadline.',
+    flag:'🔴 Red flag: identifying the problem without a plan' },
+  { accent:'#1E8449', title:'05  KAM Partnership Pipeline Log',
+    body:'KAMs: one creative partnership explored per week during quiet periods. Log co-brand, cross-sell, or new channel opportunity.',
+    flag:'🟡 Amber flag: blank log = director review call' },
+];
+const QUARTERLY_REQS = [
+  { title:'Strategic Proposal', body:'1-page covering: one account rescued, one growth unlocked, one proactive risk flagged. No submission = automatic Amber status regardless of other scores.' },
+  { title:'QBR Facilitation', body:'Minimum 2 client QBRs facilitated (not just attended) per quarter. Scored on preparation quality, question depth, and client follow-through rate.' },
+  { title:'Team Knowledge Share', body:'One internal case study or insight per quarter. Passive members drag the whole team — this is non-optional.' },
+  { title:'Mentorship Cycle', body:'90-day pairing. Mentor obligations: 2 call shadows, 1 deal debrief, 1 written review. Both mentor and mentee are held accountable.' },
+];
+const BANDS = [
+  { score:'90–100', label:'Elite',    color:'#1E8449', desc:'Fast-track, pay review, stretch assignment' },
+  { score:'75–89',  label:'Strong',   color:'#2E6DA4', desc:'Standard progression, targeted coaching' },
+  { score:'60–74',  label:'Marginal', color:'#E67E22', desc:'90-day plan, mentor assigned, weekly reviews' },
+  { score:'< 60',   label:'At Risk',  color:'#C0392B', desc:'PIP initiated, HR looped in, same-day director conversation' },
+];
+
+// ── Render static tabs ─────────────────────────────────────────────────────
+function renderStatic() {
+  document.getElementById('weekly-list').innerHTML = WEEKLY.map(w => `
+    <div class="strip-card">
+      <div class="strip" style="background:${w.accent}"></div>
+      <div class="strip-body">
+        <div class="strip-title">${w.title}</div>
+        <div class="strip-text">${w.body}</div>
+        <div class="strip-text" style="margin-top:6px;font-style:italic">${w.flag}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('quarterly-reqs').innerHTML = QUARTERLY_REQS.map(r => `
+    <div class="strip-card" style="margin-bottom:12px">
+      <div class="strip" style="background:var(--steel)"></div>
+      <div class="strip-body">
+        <div class="strip-title">${r.title}</div>
+        <div class="strip-text">${r.body}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('quarterly-bands').innerHTML = BANDS.map(b => `
+    <div class="strip-card" style="margin-bottom:12px">
+      <div class="strip" style="background:${b.color};width:8px"></div>
+      <div class="strip-body">
+        <div class="strip-title" style="color:${b.color}">${b.label} <span style="color:var(--muted);font-weight:400;font-size:12px">${b.score}</span></div>
+        <div class="strip-text">${b.desc}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Tab nav ────────────────────────────────────────────────────────────────
+function showTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+  if (id === 'scorecard') populateSelects();
+  if (id === 'history') renderHistory();
+}
+
+// ── CSM selects ────────────────────────────────────────────────────────────
+function populateSelects() {
+  const cs = document.getElementById('csm-select');
+  const ps = document.getElementById('period-select');
+  const prevCSM = cs.value;
+  cs.innerHTML = '<option value="">— Select a CSM —</option>' +
+    state.csms.map(c => `<option value="${c.id}" ${c.id===prevCSM?'selected':''}>${c.name}</option>`).join('');
+
+  const periods = generatePeriods();
+  const prevP = ps.value;
+  ps.innerHTML = '<option value="">— Select period —</option>' +
+    periods.map(p => `<option value="${p}" ${p===prevP?'selected':''}>${p}</option>`).join('');
+}
+
+function generatePeriods() {
+  const out = [];
+  const now = new Date();
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    out.push(d.toLocaleString('default', { month: 'long', year: 'numeric' }));
+  }
+  // Add quarters
+  const y = now.getFullYear();
+  ['Q1','Q2','Q3','Q4'].forEach(q => { out.push(`${q} ${y}`); out.push(`${q} ${y-1}`); });
+  return out;
+}
+
+// ── Load scorecard ─────────────────────────────────────────────────────────
+let currentScores = {};
+
+function loadCSM() {
+  const csmId  = document.getElementById('csm-select').value;
+  const period = document.getElementById('period-select').value;
+  if (!csmId || !period) {
+    document.getElementById('sc-placeholder').style.display = '';
+    document.getElementById('sc-body').style.display = 'none';
+    document.getElementById('sc-header').style.display = 'none';
+    return;
+  }
+  const csm = state.csms.find(c => c.id === csmId);
+  const existing = state.scores.find(s => s.csmId === csmId && s.period === period);
+  currentScores = {};
+  DIMS.forEach(d => currentScores[d.key] = existing ? (existing.scores[d.key] || 0) : Math.floor(d.max * 0.6));
+
+  document.getElementById('sc-name-display').textContent = csm.name;
+  document.getElementById('sc-period-display').textContent = `${csm.role} · ${period}`;
+  document.getElementById('sc-placeholder').style.display = 'none';
+  document.getElementById('sc-header').style.display = 'flex';
+  document.getElementById('sc-body').style.display = 'block';
+
+  renderDims();
+  updateTotals();
+}
+
+function renderDims() {
+  document.getElementById('dim-rows').innerHTML = DIMS.map(d => `
+    <div class="dim-row">
+      <div class="dim-top">
+        <div>
+          <div class="dim-label">${d.label}</div>
+          <div class="dim-desc">${d.desc}</div>
+        </div>
+        <div class="dim-right">
+          <input type="range" min="0" max="${d.max}" step="1" value="${currentScores[d.key]}"
+            oninput="updateDim('${d.key}', this.value)"
+            style="accent-color:${d.color}">
+          <div class="dim-pts" id="pts-${d.key}">${currentScores[d.key]}/${d.max}</div>
+        </div>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" id="bar-${d.key}"
+          style="width:${(currentScores[d.key]/d.max*100).toFixed(0)}%;background:${d.color}"></div>
+      </div>
+    </div>`).join('');
+}
+
+function updateDim(key, val) {
+  currentScores[key] = parseInt(val);
+  const d = DIMS.find(x => x.key === key);
+  document.getElementById('pts-' + key).textContent = `${val}/${d.max}`;
+  document.getElementById('bar-' + key).style.width = (val / d.max * 100).toFixed(0) + '%';
+  updateTotals();
+}
+
+function updateTotals() {
+  const total = Object.values(currentScores).reduce((a,b) => a+b, 0);
+  let grade, gClass, narrative;
+  if (total >= 90) {
+    grade='Elite'; gClass='g-elite';
+    narrative='This CSM is operating at a strategic level — anticipating client risk, running proactive initiatives, submitting quality insights. Accelerate their development immediately: stretch assignment, mentorship role, and fast-track conversation are all warranted.';
+  } else if (total >= 75) {
+    grade='Strong'; gClass='g-strong';
+    narrative='Solid performance across most dimensions. A few areas need sharper execution — check amber-rated dimensions for coaching focus. Standard progression is appropriate; targeted development will push this into Elite territory.';
+  } else if (total >= 60) {
+    grade='Marginal'; gClass='g-marginal';
+    narrative='Performance is inconsistent. There are clear gaps in strategic contribution and proactive behaviour. A 90-day improvement plan with weekly director check-ins is required. Mentorship must be assigned immediately. This band cannot persist beyond one quarter.';
+  } else {
+    grade='At Risk'; gClass='g-risk';
+    narrative='Non-performance is documented across multiple dimensions. PIP must be initiated this week. HR should be looped in. Director must have a direct, same-day conversation. If the PIP is not met within 30–60 days, the decision to exit must be made without delay.';
+  }
+
+  document.getElementById('sc-total').textContent = total;
+  const gb = document.getElementById('sc-grade');
+  gb.textContent = grade; gb.className = 'grade-badge ' + gClass;
+
+  document.getElementById('stat-grid').innerHTML = DIMS.map(d => `
+    <div class="stat-card">
+      <div class="stat-label">${d.label}</div>
+      <div class="stat-val" style="color:${d.color}">${currentScores[d.key]}<span class="stat-max">/${d.max}</span></div>
+      <div class="bar-track" style="margin-top:8px">
+        <div class="bar-fill" style="width:${(currentScores[d.key]/d.max*100).toFixed(0)}%;background:${d.color}"></div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('narrative-text').textContent = narrative;
+}
+
+// ── Save ───────────────────────────────────────────────────────────────────
+function saveScore() {
+  const csmId  = document.getElementById('csm-select').value;
+  const period = document.getElementById('period-select').value;
+  if (!csmId || !period) { alert('Please select a CSM and period first.'); return; }
+
+  const total = Object.values(currentScores).reduce((a,b) => a+b, 0);
+  const grade = total >= 90 ? 'Elite' : total >= 75 ? 'Strong' : total >= 60 ? 'Marginal' : 'At Risk';
+
+  const existing = state.scores.findIndex(s => s.csmId === csmId && s.period === period);
+  const entry = { csmId, period, scores: { ...currentScores }, total, grade, savedAt: new Date().toISOString() };
+  if (existing >= 0) state.scores[existing] = entry; else state.scores.push(entry);
+  save();
+
+  const btn = event.target;
+  btn.textContent = '✓ Saved'; btn.style.background = '#1E8449';
+  setTimeout(() => { btn.textContent = 'Save Score'; btn.style.background = ''; }, 2000);
+}
+
+// ── History ────────────────────────────────────────────────────────────────
+function renderHistory() {
+  const el = document.getElementById('history-list');
+  if (!state.scores.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div>No scores saved yet. Score a CSM and hit Save.</div></div>';
+    return;
+  }
+  const sorted = [...state.scores].sort((a,b) => new Date(b.savedAt) - new Date(a.savedAt));
+  el.innerHTML = sorted.map((s, i) => {
+    const csm = state.csms.find(c => c.id === s.csmId) || { name: 'Unknown' };
+    const g = s.grade;
+    const cls = g === 'Elite' ? 'b-green' : g === 'Strong' ? 'b-steel' : g === 'Marginal' ? 'b-amber' : 'b-red';
+    return `
+      <div class="history-entry">
+        <div class="he-left">
+          <div class="he-name">${csm.name}</div>
+          <div class="he-period">${s.period} · saved ${new Date(s.savedAt).toLocaleDateString()}</div>
+        </div>
+        <div class="he-right">
+          <div class="he-score">${s.total}<span style="font-size:14px;color:var(--muted)">/100</span></div>
+          <span class="badge ${cls}">${g}</span>
+          <div class="he-actions">
+            <button class="icon-btn" title="Load" onclick="loadHistoryEntry('${s.csmId}','${s.period}')">↗</button>
+            <button class="icon-btn del" title="Delete" onclick="deleteEntry(${i})">✕</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function loadHistoryEntry(csmId, period) {
+  document.querySelectorAll('.tab-btn')[3].click();
+  setTimeout(() => {
+    document.getElementById('csm-select').value = csmId;
+    document.getElementById('period-select').value = period;
+    loadCSM();
+  }, 50);
+}
+
+function deleteEntry(idx) {
+  const sorted = [...state.scores].sort((a,b) => new Date(b.savedAt) - new Date(a.savedAt));
+  const entry = sorted[idx];
+  const realIdx = state.scores.findIndex(s => s.csmId === entry.csmId && s.period === entry.period);
+  if (realIdx >= 0) { state.scores.splice(realIdx, 1); save(); renderHistory(); }
+}
+
+// ── Add CSM ────────────────────────────────────────────────────────────────
+function openAddModal() {
+  document.getElementById('add-modal').classList.add('open');
+  document.getElementById('new-csm-name').focus();
+}
+function closeModal() { document.getElementById('add-modal').classList.remove('open'); }
+document.getElementById('add-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+function addCSM() {
+  const name = document.getElementById('new-csm-name').value.trim();
+  if (!name) { alert('Please enter a name.'); return; }
+  const role = document.getElementById('new-csm-role').value;
+  const id = 'c' + Date.now();
+  state.csms.push({ id, name, role });
+  save(); closeModal();
+  document.getElementById('new-csm-name').value = '';
+  populateSelects();
+}
+
+// ── Export CSV ─────────────────────────────────────────────────────────────
+function exportCSV() {
+  if (!state.scores.length) { alert('No scores to export yet.'); return; }
+  const headers = ['Name','Role','Period','Total','Grade', ...DIMS.map(d => d.label),'Saved At'];
+  const rows = state.scores.map(s => {
+    const csm = state.csms.find(c => c.id === s.csmId) || { name:'?', role:'?' };
+    return [csm.name, csm.role, s.period, s.total, s.grade,
+            ...DIMS.map(d => s.scores[d.key] || 0), s.savedAt].join(',');
+  });
+  const blob = new Blob([[headers.join(','), ...rows].join('\n')], { type:'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'csm_scorecard_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+// ── Print ──────────────────────────────────────────────────────────────────
+function printCard() { window.print(); }
+
+// ── Init ───────────────────────────────────────────────────────────────────
+renderStatic();
+populateSelects();
+</script>
+</body>
+</html>
